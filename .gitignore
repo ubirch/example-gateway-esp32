@@ -1,0 +1,8 @@
+build
+sdkconfig
+sdkconfig.old
+gdbinit
+cmake-build-*
+.idea/
+.vscode/
+main/settings.h

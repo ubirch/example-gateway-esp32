@@ -1,0 +1,27 @@
+[submodule "components/msgpack-c"]
+	path = components/msgpack-c
+	url = https://github.com/ubirch/msgpack-c.git
+[submodule "components/ubirch-esp32-api-http"]
+	path = components/ubirch-esp32-api-http
+	url = https://github.com/ubirch/ubirch-esp32-api-http.git
+[submodule "components/ubirch-esp32-console"]
+	path = components/ubirch-esp32-console
+	url = https://github.com/ubirch/ubirch-esp32-console.git
+[submodule "components/ubirch-esp32-key-storage"]
+	path = components/ubirch-esp32-key-storage
+	url = https://github.com/ubirch/ubirch-esp32-key-storage.git
+[submodule "components/ubirch-esp32-networking"]
+	path = components/ubirch-esp32-networking
+	url = https://github.com/ubirch/ubirch-esp32-networking.git
+[submodule "components/ubirch-esp32-ota"]
+	path = components/ubirch-esp32-ota
+	url = https://github.com/ubirch/ubirch-esp32-ota.git
+[submodule "components/ubirch-esp32-storage"]
+	path = components/ubirch-esp32-storage
+	url = https://github.com/ubirch/ubirch-esp32-storage.git
+[submodule "components/ubirch-mbed-nacl-cm0"]
+	path = components/ubirch-mbed-nacl-cm0
+	url = https://github.com/ubirch/ubirch-mbed-nacl-cm0.git
+[submodule "components/ubirch-protocol"]
+	path = components/ubirch-protocol
+	url = https://github.com/ubirch/ubirch-protocol.git
