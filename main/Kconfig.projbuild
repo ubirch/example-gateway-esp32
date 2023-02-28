@@ -1,5 +1,17 @@
 menu "UBIRCH Application"
 
+config UBIRCH_WIFI_SSID
+	string "wifi SSID"
+	default "myssid"
+	help
+		The wifi SSID the application will connect to.
+
+config UBIRCH_WIFI_PWD
+	string "wifi password"
+	default "mypassword"
+	help
+		The wifi password the application will use.
+
 config UBIRCH_BACKEND_DATA_URL
     string "ubirch-protocol data URL"
     default "https://niomon.prod.ubirch.com"
