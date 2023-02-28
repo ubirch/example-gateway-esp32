@@ -1,7 +1,4 @@
-set(COMPONENT_SRCS
-        main.c
-        sensor.c
-        )
+set(COMPONENT_SRCS main.c)
 
 set(COMPONENT_ADD_INCLUDEDIRS "${CMAKE_CURRENT_LIST_DIR}")
 
