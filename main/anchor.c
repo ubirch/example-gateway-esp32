@@ -31,12 +31,10 @@
 #include <ubirch_api.h>
 #include <response.h>
 #include <esp_log.h>
-// #include <esp32-hal-adc.h>
 #include "driver/gpio.h"
-//#include <esp32-temp.h>
 #include <ubirch_protocol.h>
 #include <ubirch_ed25519.h>
-#include "sensor.h"
+#include "anchor.h"
 #include "key_handling.h"
 
 //#define LOG_LOCAL_LEVEL ESP_LOG_DEBUG
@@ -67,7 +65,7 @@ void response_handler(const struct msgpack_object_kv *entry) {
  * @param len length of received data
  */
 void bin_response_handler(const void* data, size_t len) {
-    ESP_LOG_BUFFER_HEXDUMP("response UPP payload", data, len, ESP_LOG_INFO);
+    ESP_LOG_BUFFER_HEXDUMP("response UPP payload", data, len, ESP_LOG_DEBUG);
 }
 
 /*!
@@ -79,20 +77,12 @@ static int ed25519_verify_backend_response(const unsigned char *data,
     return ed25519_verify_key(data, len, signature, server_pub_key);
 }
 
-/*!
- * The actual sending function that packages the data and sends it to the backend.
- * @param temperature the temperature to send
- * @param humidity the humidity value to send
- * @return ESP_OK or an error code
- */
-static esp_err_t send_message(float temperature, float humidity) {
+esp_err_t ubirch_anchor_data(int32_t* values, uint16_t num) {
     // create a ubirch protocol context
     ubirch_protocol *upp = ubirch_protocol_new(UUID, ed25519_sign); //!< send buffer
     msgpack_unpacker *unpacker = msgpack_unpacker_new(128); //!< receive unpacker
 
-    int32_t values[2] = {(int32_t) (temperature * 100), (int32_t) (humidity * 100)};
-
-    ubirch_message(upp, values, sizeof(values) / sizeof(values[0]));
+    ubirch_message(upp, values, num);
     ESP_LOGI("UBIRCH SEND", " to %s , len: %d",CONFIG_UBIRCH_BACKEND_DATA_URL, upp->size);
     ESP_LOG_BUFFER_HEXDUMP("UPP", upp->data,upp->size, ESP_LOG_DEBUG);
     int http_status;
@@ -134,27 +124,4 @@ static esp_err_t send_message(float temperature, float humidity) {
     msgpack_unpacker_free(unpacker);
 
     return ESP_OK;
-}
-
-void sensor_setup() {
-    // set the blue LED pin on the ESP32 DEVKIT V1 board
-    gpio_set_direction(BLUE_LED, GPIO_MODE_OUTPUT);
-    gpio_set_direction(BOOT_BUTTON, GPIO_MODE_INPUT);
-}
-
-/*!
- * The main sensor measurement function.
- */
- void sensor_loop() {
-     // let the LED blink
-    if (interval < 1000) gpio_set_level(BLUE_LED, 0); else gpio_set_level(BLUE_LED, 1);
-
-    int f_hall = 12; //hallRead();
-    float f_temperature = 36.5;//temperatureRead();
-    ESP_LOGI(__func__, "Hall Sensor = %d ", f_hall);
-    ESP_LOGI(__func__, "Temp Sensor = %f", f_temperature);
-
-    send_message(f_hall, f_temperature);
-
-    vTaskDelay(pdMS_TO_TICKS(interval));
 }
