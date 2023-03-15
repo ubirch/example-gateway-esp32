@@ -73,7 +73,7 @@ static void sensor_simulator_task(void *pvParameters) {
     RingbufHandle_t buf_handle = *(RingbufHandle_t*)pvParameters;
 
     // TODO: at startup create a set of sensor-id's, or use a fix set
-    unsigned char sensors[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27};
+    unsigned char sensors[] = {0, 1};
     size_t number_of_sensors = ((sizeof sensors) / (sizeof *sensors));
 
     EventBits_t event_bits;
