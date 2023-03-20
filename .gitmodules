@@ -4,9 +4,6 @@
 [submodule "components/ubirch-esp32-api-http"]
 	path = components/ubirch-esp32-api-http
 	url = https://github.com/ubirch/ubirch-esp32-api-http.git
-[submodule "components/ubirch-esp32-console"]
-	path = components/ubirch-esp32-console
-	url = https://github.com/ubirch/ubirch-esp32-console.git
 [submodule "components/ubirch-esp32-key-storage"]
 	path = components/ubirch-esp32-key-storage
 	url = https://github.com/ubirch/ubirch-esp32-key-storage.git

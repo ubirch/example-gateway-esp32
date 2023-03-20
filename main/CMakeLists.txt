@@ -3,7 +3,6 @@ set(COMPONENT_SRCS anchor.c main.c)
 set(COMPONENT_ADD_INCLUDEDIRS "${CMAKE_CURRENT_LIST_DIR}")
 
 set(COMPONENT_REQUIRES
-        ubirch-esp32-console
         ubirch-esp32-networking
         ubirch-esp32-ota
         ubirch-esp32-storage
