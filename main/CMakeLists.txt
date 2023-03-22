@@ -1,4 +1,4 @@
-set(COMPONENT_SRCS anchor.c main.c)
+set(COMPONENT_SRCS anchor.c main.c id_manager.c)
 
 set(COMPONENT_ADD_INCLUDEDIRS "${CMAKE_CURRENT_LIST_DIR}")
 
