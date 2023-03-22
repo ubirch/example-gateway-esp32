@@ -56,7 +56,7 @@ static TaskHandle_t sensor_simulator_task_handle = NULL;
  * Simulation data
  */
 typedef struct {
-    unsigned char id;
+    char id[16];
     int32_t data;
 } sensor_data_t;
 
@@ -69,7 +69,7 @@ static void sensor_simulator_task(void *pvParameters) {
     RingbufHandle_t buf_handle = *(RingbufHandle_t*)pvParameters;
 
     // TODO: at startup create a set of sensor-id's, or use a fix set
-    unsigned char sensors[] = {0x29, 0x2b, 0x2a, 0x30, 0x41};
+    char sensors[2][15] = {"test_alpha", "test_beta"};
     size_t number_of_sensors = ((sizeof sensors) / (sizeof *sensors));
 
     EventBits_t event_bits;
@@ -88,11 +88,10 @@ static void sensor_simulator_task(void *pvParameters) {
             continue;
         }
 
-        ESP_LOGI(TAG, "Simulate sensor data from sensor %x", sensors[sensor_index]);
-        sensor_data_t data = {
-            .id = sensors[sensor_index],
-            .data = dummy_data++
-        };
+        ESP_LOGI(TAG, "Simulate sensor data from sensor %s", sensors[sensor_index]);
+        sensor_data_t data = {};
+        strcpy(data.id, sensors[sensor_index]);
+        data.data = dummy_data++;
 
         // send it to main task
         UBaseType_t res =  xRingbufferSend(buf_handle, &data, sizeof(sensor_data_t),
@@ -151,7 +150,7 @@ static void main_task(void *pvParameters) {
             // free the ringbuffer
             vRingbufferReturnItem(buf_handle, (void*)sensor_data);
         }
-        ESP_LOGI(TAG, "received sensor data (%d) from sensor (%x)", sensor_data->data, sensor_data->id);
+        ESP_LOGI(TAG, "received sensor data (%d) from sensor (%s)", sensor_data->data, sensor_data->id);
 
         // manage the current ID context
         if (ubirch_id_context_manage(sensor_data->id) != ESP_OK) {
