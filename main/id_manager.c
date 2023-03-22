@@ -43,14 +43,14 @@
 
 static const char *TAG = "id_manager";
 
-esp_err_t ubirch_id_context_manage(unsigned char id){
+esp_err_t ubirch_id_context_manage(char *id){
     
     esp_err_t err = ESP_OK;
     char gateway_uuid_string[37];
 
     // generate short-name from sensor_data->id
     char short_name[16];
-    snprintf(short_name, 10, "sensor_%02x", id);
+    snprintf(short_name, 15, "%s", id);
     ESP_LOGI(TAG, "deriving short name: %s", short_name);
         
     // load id-context by short-name
@@ -64,7 +64,7 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
         if (!ubirch_token_state_get(UBIRCH_TOKEN_STATE_VALID)) {
             ESP_LOGW(TAG, "token not valid");
             // we cannot decide here if the token was used successfully before
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
 
         // check that we have current time before trying to generate/register keys
@@ -74,14 +74,13 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
         localtime_r(&now, &timeinfo);
         // update time
         if (timeinfo.tm_year < (2017 - 1900)) {
-// TODO check if necessary ->            vTaskDelay(pdMS_TO_TICKS(2000));
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
 
         // add new context
         if (ubirch_id_context_add(short_name) != ESP_OK) {
             ESP_LOGE(TAG, "failed to add context \"%s\"", short_name);
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
 
         // create uuid from gateway uuid and sensor id
@@ -102,7 +101,7 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
         }
         if (ubirch_uuid_set(sensor_uuid, sizeof(sensor_uuid)) != ESP_OK) {
             ESP_LOGE(TAG, "failed to set uuid");
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         };
         char sensor_uuid_string[37];
         uuid_to_string(sensor_uuid, sensor_uuid_string, sizeof(sensor_uuid_string));
@@ -115,7 +114,7 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
         unsigned char prev_sig[64] = { 0 };
         if (ubirch_previous_signature_set(prev_sig, sizeof(prev_sig)) != ESP_OK) {
             ESP_LOGE(TAG, "failed to initialize previous signature");
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         };
 
         // store current context
@@ -126,7 +125,7 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
                 ESP_LOGE(TAG, "Failed to remove basic ID context");
             }
             // we cannot decide here if the token was used successfully before
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
         // --> here a new key is stored, but not yet registered
     }
@@ -136,7 +135,7 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
         // check if token is valid
         if (!ubirch_token_state_get(UBIRCH_TOKEN_STATE_VALID)) {
             // we cannot decide here if the token was used successfully before
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
         // call id registering function with token
         // TODO: uff! we need to distinguish the return codes in ubirch_register_current_id!
@@ -157,13 +156,13 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
                 }
             default:
                 // we cannot decide here if the token was used successfully before
-                return ESP_FAIL; //continue;
+                return ESP_FAIL; 
         }
 
         ubirch_id_state_set(UBIRCH_ID_STATE_ID_REGISTERED, true);
         if (ubirch_id_context_store() != ESP_OK) {
             ESP_LOGE(TAG, "Failed to store ID context after id registration");
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
     }
 
@@ -172,11 +171,11 @@ esp_err_t ubirch_id_context_manage(unsigned char id){
         // check if the existing token is valid
         if (register_keys() != ESP_OK) {
             ESP_LOGW(TAG, "failed to register keys, try later");
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
         if (ubirch_id_context_store() != ESP_OK) {
             ESP_LOGE(TAG, "Failed to store ID context after key registration");
-            return ESP_FAIL; //continue;
+            return ESP_FAIL; 
         }
     }
 

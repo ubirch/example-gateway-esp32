@@ -37,7 +37,7 @@
  * @param[in] short_name pointer to shortname of the identity to manage
  * @return ESP_OK if works, TODO otherwise
 */
-esp_err_t ubirch_id_context_manage(unsigned char id);
+esp_err_t ubirch_id_context_manage(char *id);
 
 
 #endif /* EXAMPLE_ESP32_IDENTITY_MANAGER_H */
