@@ -23,8 +23,8 @@
  * limitations under the License.
  * ```
  */
-#ifndef EXAMPLE_ESP32_SENSOR_H
-#define EXAMPLE_ESP32_SENSOR_H
+#ifndef EXAMPLE_ESP32_ANCHOR_H
+#define EXAMPLE_ESP32_ANCHOR_H
 
 /*!
  * Create UPP from array of 32-bit integers and send the UPP (including
@@ -42,4 +42,4 @@
  */
 esp_err_t ubirch_anchor_data(int32_t* values, uint16_t num);
 
-#endif //EXAMPLE_ESP32_SENSOR_H
+#endif //EXAMPLE_ESP32_ANCHOR_H
