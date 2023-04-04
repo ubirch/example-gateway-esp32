@@ -32,11 +32,11 @@
 #define EXAMPLE_ESP32_IDENTITY_MANAGER_H
 
 /*!
- * @brief manage identity context, given by the \p short_name
+ * @brief manage identity context, given by the \p id
  *
- * @param[in] short_name pointer to shortname of the identity to manage
- * @return ESP_OK if works, TODO otherwise
-*/
+ * @param[in] id pointer to the identity to manage
+ * @return ESP_OK if it works, ESP_FAIL if error occurs
+ */
 esp_err_t ubirch_id_context_manage(char *id);
 
 

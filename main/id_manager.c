@@ -43,9 +43,12 @@
 
 static const char *TAG = "id_manager";
 
+// >>> HERE THE NAMESPACE IS SET, which is later used for UUID generation
+static const char *NAMESPACE = "example_namespace";
+// <<<
+
 esp_err_t ubirch_id_context_manage(char *id){
     
-    esp_err_t err = ESP_OK;
     char gateway_uuid_string[37];
 
     // generate short-name from sensor_data->id
@@ -83,26 +86,31 @@ esp_err_t ubirch_id_context_manage(char *id){
             return ESP_FAIL; 
         }
 
-        // create uuid from gateway uuid and sensor id
+        // >>> HERE THE GATEWAY ID IS SET, this part can be adapted to the needs of the user
         // load gateway-uuid
         uuid_t gateway_uuid;
         esp_efuse_mac_get_default(gateway_uuid);
         esp_base_mac_addr_set(gateway_uuid);
-        gateway_uuid[14]++;
 
-        // uuid string, to be reused later
+        // gateway uuid string, will be later used for the name in UBIRCH console
         uuid_to_string(gateway_uuid, gateway_uuid_string, sizeof(gateway_uuid_string));
         ESP_LOGI(TAG, "gateway uuid: %s", gateway_uuid_string);
+        // <<<
 
+        // derive sensor UUID
         uuid_t sensor_uuid;
-        if (uuid_v5_create_from_name(&sensor_uuid,
+        if (uuid_v5_create_derived_from_name(&sensor_uuid, 
+                    (char*)NAMESPACE, sizeof(NAMESPACE),
                     (char*)gateway_uuid, sizeof(gateway_uuid),
-                    short_name, sizeof(short_name)) != ESP_OK) {
+                    short_name, sizeof(short_name)
+                    ) != ESP_OK) {
+            ESP_LOGE(TAG, "failed to generate uuid");
+            return ESP_FAIL; 
         }
         if (ubirch_uuid_set(sensor_uuid, sizeof(sensor_uuid)) != ESP_OK) {
             ESP_LOGE(TAG, "failed to set uuid");
             return ESP_FAIL; 
-        };
+        }
         char sensor_uuid_string[37];
         uuid_to_string(sensor_uuid, sensor_uuid_string, sizeof(sensor_uuid_string));
         ESP_LOGI(TAG, "derived uuid: %s", sensor_uuid_string);
@@ -115,7 +123,7 @@ esp_err_t ubirch_id_context_manage(char *id){
         if (ubirch_previous_signature_set(prev_sig, sizeof(prev_sig)) != ESP_OK) {
             ESP_LOGE(TAG, "failed to initialize previous signature");
             return ESP_FAIL; 
-        };
+        }
 
         // store current context
         if (ubirch_id_context_store() != ESP_OK) {
@@ -138,10 +146,11 @@ esp_err_t ubirch_id_context_manage(char *id){
             return ESP_FAIL; 
         }
         // call id registering function with token
-        // TODO: uff! we need to distinguish the return codes in ubirch_register_current_id!
+        // >>> HERE THE DESCRIPTION FOR THE SENSOR IN THE UBIRCH CONSOLE IS CREATED
         char description[15 + 12 + 37];
         // chose an arbitrary description
         sprintf(description, "%s on gateway %s", short_name, gateway_uuid_string);
+        // <<<
         switch (ubirch_register_current_id(description)) {
             case UBIRCH_ESP32_REGISTER_THING_SUCCESS:
                 ESP_LOGI(TAG, "id creation successfull");
@@ -197,7 +206,7 @@ esp_err_t ubirch_id_context_manage(char *id){
         }
     }
 
-    return err;
+    return ESP_OK;
 }
 
 
