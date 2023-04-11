@@ -51,7 +51,7 @@ esp_err_t ubirch_id_context_manage(char *id){
     
     char gateway_uuid_string[37];
 
-    // generate short-name from sensor_data->id
+    // generate short-name from id 
     char short_name[16];
     snprintf(short_name, 15, "%s", id);
     ESP_LOGI(TAG, "deriving short name: %s", short_name);
