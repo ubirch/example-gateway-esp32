@@ -3,9 +3,9 @@
  * @brief   main function of the example program
  *
  * @author Waldemar Gruenwald
- * @date   2018-10-10
+ * @date   2023-02-22
  *
- * @copyright &copy; 2018 ubirch GmbH (https://ubirch.com)
+ * @copyright &copy; 2023 ubirch GmbH (https://ubirch.com)
  *
  * ```
  * Licensed under the Apache License, Version 2.0 (the "License");
