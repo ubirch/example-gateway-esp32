@@ -12,7 +12,8 @@
     1. [ESP32-IDF and xtensa toolchain](#esp32-idf-and-xtensa-toolchain)
     1. [example gateway ESP32 application](#example-gateway-esp32-application)
     1. [The submodules](#the-submodules)
-1. [Pre-build configuration](#pre-build-configuration)
+1. [Setup and configuration](#setup-and-configuration)
+    1. [Configure your application](#configure-your-application)
 1. [Build your application](#build-your-application)
     1. [Build and run tests](#build-and-run-tests)
     1. [Store JWT token on gateway memory]()
@@ -128,10 +129,13 @@ This list provides the links to the submodule repositories:
 - [ubirch-mbed-nacl-cm0](https://github.com/ubirch/ubirch-mbed-nacl-cm0)
 - [ubirch-protocol](https://github.com/ubirch/ubirch-protocol)
 
-# Pre-build configuration
+# Setup and configuration
+
+For the setup and installation of the toolchain and all requirements please refer to the official [Installation Guide](https://docs.espressif.com/projects/esp-idf/en/release-v4.3/esp32/get-started/index.html#installation-step-by-step)
 
 >**Note:** in ESP-IDF `release/v4.3` it is possible to use the `idf.py` tool for the most important tasks. For more information, please visit the [ESP-IDF Programming Guide](https://docs.espressif.com/projects/esp-idf/en/release-v4.3/esp32/get-started/index.html).
 
+## Configure your application
 The URLs for the data, keys and firmware updates, as well as the Wifi credentials can be configured by running:
 ```bash
 $ idf.py menuconfig
