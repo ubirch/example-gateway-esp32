@@ -3,9 +3,9 @@
  * @brief   main function of the example program
  *
  * @author Waldemar Gruenwald
- * @date   2018-10-10
+ * @date   2023-02-22
  *
- * @copyright &copy; 2018 ubirch GmbH (https://ubirch.com)
+ * @copyright &copy; 2023 ubirch GmbH (https://ubirch.com)
  *
  * ```
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,20 +30,16 @@
 #include <esp_log.h>
 #include <networking.h>
 #include <sntp_time.h>
-#include <ubirch_console.h>
 #include <nvs_flash.h>
 #include <ubirch_ota_task.h>
 #include <ubirch_ota.h>
 #include <time.h>
 
 #include "storage.h"
-#include "keys.h"
-#include "id_handling.h"
 #include "key_handling.h"
 #include "token_handling.h"
-#include "api-http-helper.h"
-#include "register_thing.h"
 #include "anchor.h"
+#include "id_manager.h"
 
 char *TAG = "example-gateway";
 
@@ -60,7 +56,7 @@ static TaskHandle_t sensor_simulator_task_handle = NULL;
  * Simulation data
  */
 typedef struct {
-    unsigned char id;
+    char id[16];
     int32_t data;
 } sensor_data_t;
 
@@ -73,7 +69,7 @@ static void sensor_simulator_task(void *pvParameters) {
     RingbufHandle_t buf_handle = *(RingbufHandle_t*)pvParameters;
 
     // TODO: at startup create a set of sensor-id's, or use a fix set
-    unsigned char sensors[] = {0, 1};
+    char sensors[2][15] = {"test_alpha", "test_beta"};
     size_t number_of_sensors = ((sizeof sensors) / (sizeof *sensors));
 
     EventBits_t event_bits;
@@ -92,11 +88,10 @@ static void sensor_simulator_task(void *pvParameters) {
             continue;
         }
 
-        ESP_LOGI(TAG, "Simulate sensor data from sensor %x", sensors[sensor_index]);
-        sensor_data_t data = {
-            .id = sensors[sensor_index],
-            .data = dummy_data++
-        };
+        ESP_LOGI(TAG, "Simulate sensor data from sensor %s", sensors[sensor_index]);
+        sensor_data_t data = {};
+        strcpy(data.id, sensors[sensor_index]);
+        data.data = dummy_data++;
 
         // send it to main task
         UBaseType_t res =  xRingbufferSend(buf_handle, &data, sizeof(sensor_data_t),
@@ -122,6 +117,8 @@ static void sensor_simulator_task(void *pvParameters) {
  */
 static void main_task(void *pvParameters) {
     RingbufHandle_t buf_handle = *(RingbufHandle_t*)pvParameters;
+    EventBits_t event_bits;
+
     // load backend key
     if (load_backend_key() != ESP_OK) {
         ESP_LOGW(TAG, "unable to load backend key");
@@ -131,20 +128,6 @@ static void main_task(void *pvParameters) {
     if (ubirch_token_load() != ESP_OK) {
         ESP_LOGE(TAG, "failed to load token");
     }
-
-
-    // load gateway-uuid
-    uuid_t gateway_uuid;
-    esp_efuse_mac_get_default(gateway_uuid);
-    esp_base_mac_addr_set(gateway_uuid);
-    gateway_uuid[15]++;
-
-    // uuid string, to be reused later
-    char gateway_uuid_string[37];
-    uuid_to_string(gateway_uuid, gateway_uuid_string, sizeof(gateway_uuid_string));
-    ESP_LOGI(TAG, "gateway uuid: %s", gateway_uuid_string);
-
-    EventBits_t event_bits;
 
     for (;;) {
         // check if network connection is up
@@ -167,145 +150,11 @@ static void main_task(void *pvParameters) {
             // free the ringbuffer
             vRingbufferReturnItem(buf_handle, (void*)sensor_data);
         }
-        ESP_LOGI(TAG, "received sensor data (%d) from sensor (%x)", sensor_data->data, sensor_data->id);
+        ESP_LOGI(TAG, "received sensor data (%d) from sensor (%s)", sensor_data->data, sensor_data->id);
 
-        // generate short-name from sensor_data->id
-        char short_name[16];
-        snprintf(short_name, 10, "sensor_%02x", sensor_data->id);
-        ESP_LOGI(TAG, "deriving short name: %s", short_name);
-
-        // load id-context by short-name
-        if (ubirch_id_context_load(short_name) == ESP_OK) {
-            ESP_LOGI(TAG, "context \"%s\" could be loaded", short_name);
-        } else {
-            ESP_LOGI(TAG, "context \"%s\" not found, generate it", short_name);
-
-            // check if we have a valid token
-            if (!ubirch_token_state_get(UBIRCH_TOKEN_STATE_VALID)) {
-                ESP_LOGW(TAG, "token not valid");
-                // we cannot decide here if the token was used successfully before
-                continue;
-            }
-
-            // check that we have current time before trying to generate/register keys
-            time_t now = 0;
-            struct tm timeinfo = {0};
-            time(&now);
-            localtime_r(&now, &timeinfo);
-            // update time
-            if (timeinfo.tm_year < (2017 - 1900)) {
-                vTaskDelay(pdMS_TO_TICKS(2000));
-                continue;
-            }
-
-            // add new context
-            if (ubirch_id_context_add(short_name) != ESP_OK) {
-                ESP_LOGE(TAG, "failed to add context \"%s\"", short_name);
-                continue;
-            }
-
-            // create uuid from gateway uuid and sensor id
-            uuid_t sensor_uuid;
-            if (uuid_v5_create_from_name(&sensor_uuid,
-                        (char*)gateway_uuid, sizeof(gateway_uuid),
-                        (char*)&sensor_data->id, sizeof(sensor_data->id)) != ESP_OK) {
-            }
-            if (ubirch_uuid_set(sensor_uuid, sizeof(sensor_uuid)) != ESP_OK) {
-                ESP_LOGE(TAG, "failed to set uuid");
-                continue;
-            };
-            char sensor_uuid_string[37];
-            uuid_to_string(sensor_uuid, sensor_uuid_string, sizeof(sensor_uuid_string));
-            ESP_LOGI(TAG, "derived uuid: %s", sensor_uuid_string);
-
-            // create new key pair in current context
-            create_keys();
-
-            // set initial value for previous signature
-            unsigned char prev_sig[64] = { 0 };
-            if (ubirch_previous_signature_set(prev_sig, sizeof(prev_sig)) != ESP_OK) {
-                ESP_LOGE(TAG, "failed to initialize previous signature");
-                continue;
-            };
-
-            // store current context
-            if (ubirch_id_context_store() != ESP_OK) {
-                // probably not enough space on gateway
-                ESP_LOGE(TAG, "Failed to store basic ID context");
-                if (ubirch_id_context_delete(NULL) != ESP_OK) {
-                    ESP_LOGE(TAG, "Failed to remove basic ID context");
-                }
-                // we cannot decide here if the token was used successfully before
-                continue;
-            }
-            // --> here a new key is stored, but not yet registered
-        }
-
-        // check if id is registered
-        if (!ubirch_id_state_get(UBIRCH_ID_STATE_ID_REGISTERED)) {
-            // check if token is valid
-            if (!ubirch_token_state_get(UBIRCH_TOKEN_STATE_VALID)) {
-                // we cannot decide here if the token was used successfully before
-                continue;
-            }
-            // call id registering function with token
-            // TODO: uff! we need to distinguish the return codes in ubirch_register_current_id!
-            char description[15 + 12 + 37];
-            // chose an arbitrary description
-            sprintf(description, "%s on gateway %s", short_name, gateway_uuid_string);
-            switch (ubirch_register_current_id(description)) {
-                case UBIRCH_ESP32_REGISTER_THING_SUCCESS:
-                    ESP_LOGI(TAG, "id creation successfull");
-                    break;
-                case UBIRCH_ESP32_REGISTER_THING_ALREADY_REGISTERED:
-                    ESP_LOGE(TAG, "id was already created");
-                    break;
-                case UBIRCH_ESP32_REGISTER_THING_ERROR:
-                    ESP_LOGE(TAG, "id registration failed");
-                    if (ubirch_id_context_delete(NULL) != ESP_OK) {
-                        ESP_LOGE(TAG, "Failed to remove basic ID context");
-                    }
-                    // we cannot decide here if the token was used successfully before
-                    continue;
-                    break;
-            }
-
-            ubirch_id_state_set(UBIRCH_ID_STATE_ID_REGISTERED, true);
-            if (ubirch_id_context_store() != ESP_OK) {
-                ESP_LOGE(TAG, "Failed to store ID context after id registration");
-                continue;
-            }
-        }
-
-        // check if device from current context is registered
-        if (!ubirch_id_state_get(UBIRCH_ID_STATE_KEYS_REGISTERED)) {
-            // check if the existing token is valid
-            if (register_keys() != ESP_OK) {
-                ESP_LOGW(TAG, "failed to register keys, try later");
-                continue;
-            }
-            if (ubirch_id_context_store() != ESP_OK) {
-                ESP_LOGE(TAG, "Failed to store ID context after key registration");
-                continue;
-            }
-        }
-
-        // get next key update timestamp
-        time_t next_key_update;
-        if (ubirch_next_key_update_get(&next_key_update) != ESP_OK) {
-            ESP_LOGW(TAG, "Failed to read next key update");
-        }
-
-        // check if update necessary
-        time_t now = time(NULL);
-        if (next_key_update < now) {
-            ESP_LOGI(TAG, "Your key is about to expire. Trigger key update");
-            if (update_keys() != ESP_OK) {
-                ESP_LOGE(TAG, "Failed to update keys");
-            }
-            if (ubirch_id_context_store() != ESP_OK) {
-                ESP_LOGE(TAG, "Failed to store ID context after key update");
-            }
+        // manage the current ID context
+        if (ubirch_id_context_manage(sensor_data->id) != ESP_OK) {
+            continue;
         }
 
         // note: if we end up here we have a valid context that we can use
@@ -359,7 +208,6 @@ static esp_err_t init_system() {
     initialize_filesystem();
 #endif
 
-    init_console();
     init_wifi();
 
     //sensor_setup();

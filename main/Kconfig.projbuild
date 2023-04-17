@@ -19,7 +19,7 @@ config UBIRCH_BACKEND_DATA_URL
         The URL to send ubirch protocol messages to.
 
 config UBIRCH_BACKEND_KEY_SERVER_URL
-	string "ubirch key server URL"
+	string "ubirch msgpack key server URL"
 	default "https://key.prod.ubirch.com/api/keyService/v1/pubkey/mpack"
 	help
 		The key server URL to register public keys.
@@ -35,12 +35,6 @@ config UBIRCH_DEFAULT_INTERVAL
 	default 30000
 	help
 		The default measuring interval.
-
-config UBIRCH_MULTIPLE_IDS
-    bool "Enable multipe ids"
-    default n
-    help
-        The device can handle multiple ids at once.
 
 config UBIRCH_BACKEND_PUBLIC_KEY
     string "ubirch backend public key"

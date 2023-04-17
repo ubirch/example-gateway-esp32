@@ -31,7 +31,6 @@ foreach (C_DIR ${PROJECT_COMPONENTS})
 endforeach ()
 
 set(TEST_COMPONENTS "ubirch-esp32-api-http"
-                    "ubirch-esp32-console"
                     "ubirch-esp32-key-storage"
                     "ubirch-esp32-networking"
                     "ubirch-esp32-ota"
