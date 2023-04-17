@@ -38,7 +38,7 @@ The JWT Token is required for the automatic device registration and is described
 - generate keys, see [create_keys()](https://github.com/ubirch/ubirch-esp32-api-http/blob/master/keys.h#L50)
 - register keys at the backend, see [register_keys()](https://github.com/ubirch/ubirch-esp32-api-http/blob/master/keys.h#L58)
 - store the previous signature (from the last message), see [ubirch_previous_signature_set()](https://github.com/ubirch/ubirch-esp32-key-storage/blob/master/id_handling.h#L199)
-- store the public key from the backend, to verify the incoming message replies, see [Pre-build configuration](#pre-build-configuration)
+- store the public key from the backend, to verify the incoming message replies, see [Setup and configuration](#setup-and-configuration)
 - create a message in msgpack format, according to ubirch-protocol, see [ubirch_message()](https://github.com/ubirch/ubirch-esp32-api-http/blob/master/message.h#L44)
 - make a http post request, see [ubirch_send()](https://github.com/ubirch/ubirch-esp32-api-http/blob/master/ubirch_api.h#L58)
 - evaluate the message response, see [ubirch_parse_response()](https://github.com/ubirch/ubirch-esp32-api-http/blob/master/response.h#L44)
@@ -49,7 +49,7 @@ The following diagram shows the main program flow of this application, where the
 ![example-gateway-flow](files/example-gateway-flow.png) 
 
 ## JWT Token handling
-For the automatic registration of new sensors to the ubirch backend, it is necessary to use a JWT token. For information about how to generate a JWT token, please refer to [Use JWT Token for ...](files/Use%20JWT%20for%20creating%20and%20managing%20things-v3-20230405.pdf). Once you created the token at [console.prod.ubirch.com](console.prod.ubirch.com) you need to copy it and flash it onto the gateway. Afterwards all the new sensor devices will automatically be added to your ubirch account and can be managed. 
+For the automatic registration of new sensors to the ubirch backend, it is necessary to use a JWT token. For information about how to generate a JWT token, please refer to [Use JWT Token for ...](files/Use%20JWT%20for%20creating%20and%20managing%20things-v3-20230405.pdf). Once you created the token at [console.prod.ubirch.com](https://console.prod.ubirch.com) you need to copy it and flash it onto the gateway. Afterwards all the new sensor devices will automatically be added to your ubirch account and can be managed. 
 >If you do not have a ubirch account, or cannot generate your own JWT Tokens, please contact us at [sales(at)ubirch.com](sales@ubirch.com) and we will take care of that.
 
 
@@ -213,14 +213,14 @@ $ parttool.py read_partition --partition-name=nvs --output my_device_config_back
 ```
 This backup can be very useful, if you develop new features or run tests in between and want to keep and further use the IDs.
 
->**Note:** If you register the publis key for a device and loose the private key, there is no way to replace or remove the public key, which means that the UUID can not be used anymore.
+>**Note:** If you register the public key for a device and loose the private key, there is no way to replace or remove the public key, which means that the UUID can not be used anymore.
 
 
 # UUID Generation
 In this example the UUID for the sensor devices is based on UUID version 5, which is a Name-based UUID via SHA1, see [RFC4122](https://www.rfc-editor.org/rfc/rfc4122#section-4.3) for more information.
 
 Since this gateway application connects external sensors, the generated UUID is base on a **namespace**, a **gateway-ID** and a **sensor-ID**. This allows the generation of unique UUIDs for each gateway sensor combination. 
-> **Note:** this generated UUID and the corresponding keys and credentials are stored on the Gateway, which means, that if sensor, or gateway are excnhanged, a new UUID needs to be generated.
+> **Note:** this generated UUID and the corresponding keys and credentials are stored on the Gateway, which means, that if sensor, or gateway are exchanged, a new UUID needs to be generated.
 
 - to set the **namespace**, go [here](https://github.com/ubirch/example-gateway-esp32/blob/main/main/id_manager.c#L46-L48)
 - to set the **gateway-ID**, go [here](https://github.com/ubirch/example-gateway-esp32/blob/main/main/id_manager.c#L89-L98)
