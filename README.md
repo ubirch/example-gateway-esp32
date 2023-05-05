@@ -16,8 +16,6 @@
     1. [Configure your application](#configure-your-application)
 1. [Build your application](#build-your-application)
     1. [Build and run tests](#build-and-run-tests)
-    1. [Store JWT token on gateway memory]()
-    1. [Get backup from gateway memory](#get-backup-from-gateway-memory)
 1. [UUID Generation](#uuid-generation)
 
 # Basic functionality of the example gateway
@@ -49,10 +47,8 @@ The following diagram shows the main program flow of this application, where the
 ![example-gateway-flow](files/example-gateway-flow.png) 
 
 ## JWT Token handling
-For the automatic registration of new sensors to the ubirch backend, it is necessary to use a JWT token. For information about how to generate a JWT token, please refer to [Use JWT Token for ...](files/Use%20JWT%20for%20creating%20and%20managing%20things-v3-20230405.pdf). Once you created the token at [console.prod.ubirch.com](https://console.prod.ubirch.com) you need to copy it and flash it onto the gateway. Afterwards all the new sensor devices will automatically be added to your ubirch account and can be managed. 
->If you do not have a ubirch account, or cannot generate your own JWT Tokens, please contact us at [sales(at)ubirch.com](sales@ubirch.com) and we will take care of that.
 
-
+PLease check [this](https://github.com/ubirch/ubirch-esp32-key-storage/tree/feature/master#configuration-of-jwt-token-for-automatic-device-registration) and follow the [README](https://github.com/ubirch/ubirch-esp32-key-storage/tree/feature/master#readme) for JWT Token handling.
 
 # Required packages
 
@@ -196,25 +192,6 @@ $ idf.py monitor
 ```
 
 You can re-run single tests by using the interactive test menu which is started right after running the tests.
-
-## Store JWT token on gateway memory
-```shell
-$ python create_nvs_memory.py --stage demo --out gateway_memory.csv --token <insert your token here>
-
-$ python $IDF_PATH/components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py generate gateway_memory.csv gateway_memory.bin 0x3000
-
-$ parttool.py write_partition --partition-name=nvs --input gateway_memory.bin
-```
-
-## Get backup from gateway memory
-To backup the whole configuration including all sensor ID contexts use:
-```bash
-$ parttool.py read_partition --partition-name=nvs --output my_device_config_backup.bin
-```
-This backup can be very useful, if you develop new features or run tests in between and want to keep and further use the IDs.
-
->**Note:** If you register the public key for a device and loose the private key, there is no way to replace or remove the public key, which means that the UUID can not be used anymore.
-
 
 # UUID Generation
 In this example the UUID for the sensor devices is based on UUID version 5, which is a Name-based UUID via SHA1, see [RFC4122](https://www.rfc-editor.org/rfc/rfc4122#section-4.3) for more information.
